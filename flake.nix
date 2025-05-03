@@ -4,9 +4,18 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
     flake-utils.url = "github:numtide/flake-utils";
+    darwin = {
+      url = "github:LnL7/nix-darwin";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, flake-utils, ... }:
+  outputs = { self, nixpkgs, flake-utils, darwin, ... }:
+    let
+      darwinModule = { config, lib, pkgs, ... }: {
+        environment.systemPackages = [ self.packages.${pkgs.system}.leapp ];
+      };
+    in
     flake-utils.lib.eachSystem [
       "aarch64-darwin"
     ] (system:
@@ -68,5 +77,7 @@
       in {
         packages.default = leapp;
         packages.leapp = leapp;
-      });
+      }) // {
+        darwinModules.leapp = darwinModule;
+      };
 }
